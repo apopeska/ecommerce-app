@@ -1,0 +1,49 @@
+
+services:
+
+  frontend:
+    build: ./frontend
+    container_name: ecommerce-frontend
+
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    container_name: ecommerce-backend
+
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ecommerce
+      DB_USER: ecommerce_user
+      DB_PASSWORD: ecommerce_password
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: ecommerce-postgres
+
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce_user
+      POSTGRES_PASSWORD: ecommerce_password
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgres_data:
+
