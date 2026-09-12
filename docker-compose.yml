@@ -1,15 +1,26 @@
+﻿services:
 
-services:
+  postgres:
+    image: postgres:16
+    container_name: ecommerce-postgres
 
-  frontend:
-    build: ./frontend
-    container_name: ecommerce-frontend
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce_user
+      POSTGRES_PASSWORD: ecommerce_password
 
     ports:
-      - "5173:5173"
+      - "5433:5432"
 
-    depends_on:
-      - backend
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce_user -d ecommerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./backend
@@ -26,24 +37,18 @@ services:
       - "3000:3000"
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
-  postgres:
-    image: postgres:16
-    container_name: ecommerce-postgres
-
-    environment:
-      POSTGRES_DB: ecommerce
-      POSTGRES_USER: ecommerce_user
-      POSTGRES_PASSWORD: ecommerce_password
+  frontend:
+    build: ./frontend
+    container_name: ecommerce-frontend
 
     ports:
-      - "5433:5432"
+      - "5173:5173"
 
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
-
